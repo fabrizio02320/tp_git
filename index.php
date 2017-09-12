@@ -40,9 +40,18 @@ if(isset($_POST['creer']) && isset($_POST['nom'])) {
 		$manager->add($perso);
 	}	
 }
-elseif (isset($_POST['utiliser']) && isset($_POST['nom'])) { // si on souhaite utiliser un perso
-	if($manager->exists($_POST['nom'])) { // si le perso existe
-		$perso = $manager->get($_POST['nom']);
+// elseif (isset($_POST['utiliser']) && isset($_POST['nom'])) { // si on souhaite utiliser un perso
+	// if($manager->exists($_POST['nom'])) { // si le perso existe
+		// $perso = $manager->get($_POST['nom']);
+	// }
+	// else {
+		// $message = 'Ce personnage n\'existe pas !';
+	// }
+// }
+
+elseif (isset($_GET['nom'])) { // si on souhaite utiliser un perso
+	if($manager->exists($_GET['nom'])) { // si le perso existe
+		$perso = $manager->get($_GET['nom']);
 	}
 	else {
 		$message = 'Ce personnage n\'existe pas !';
@@ -145,8 +154,23 @@ elseif (isset($_GET['frapper'])){ // si on a cliqué sur un perso pour le frappe
 		  <p>
 			Nom : <input type="text" name="nom" maxlength="50" />
 			<input type="submit" value="Créer ce personnage" name="creer" />
-			<input type="submit" value="Utiliser ce personnage" name="utiliser" />
+			
+			<!-- <input type="submit" value="Utiliser ce personnage" name="utiliser" /> -->
 		  </p>
+<?php
+		if($manager->count()>0){
+			echo '<fieldset>';
+			echo '<legend>Ou utilisez un des personnages ci-dessous :</legend>';
+			$persos = $manager->getList();
+	
+			foreach ($persos as $unPerso) {
+				echo '<a href="?nom='. $unPerso->nom() .'">'. htmlspecialchars($unPerso->nom()) .'</a> (dégâts actuels : '. 
+					$unPerso->degats() .')<br />';
+			}	
+			echo '</fieldset>';		
+		}
+		  
+?>
 		</form>
 		
 	<?php
