@@ -1,3 +1,91 @@
+<?php
+// enregistrement de l'autoload
+function chargerClasse($classname) {
+	require $classname .'.php';
+}
+
+spl_autoload_register('chargerClasse');
+
+session_start();
+
+if (isset($_GET['deconnexion']))
+{
+  session_destroy();
+  header('Location: .');
+  exit();
+}
+
+if(isset($_SESSION['perso'])) {
+	$perso = $_SESSION['perso'];
+}
+
+$db = new PDO('mysql:host=localhost; dbname=tp_minijeu', 'root', '');
+// paramétrage des alertes lorsqu'une requête a échoué
+$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING);
+
+$manager = new PersonnageManager($db);
+
+if(isset($_POST['creer']) && isset($_POST['nom'])) {
+	$perso = new Personnage(['nom' => $_POST['nom']]); // create new perso
+	
+	if(!$perso->nomValide()){
+		$message = 'Le nom choisi est invalide.';
+		unset($perso);
+	}
+	elseif ($manager->exists($perso->nom())){
+		$message = 'Le nom du personnage est déjà pris.';
+		unset ($perso);
+	}
+	else {		
+		$manager->add($perso);
+	}	
+}
+elseif (isset($_POST['utiliser']) && isset($_POST['nom'])) { // si on souhaite utiliser un perso
+	if($manager->exists($_POST['nom'])) { // si le perso existe
+		$perso = $manager->get($_POST['nom']);
+	}
+	else {
+		$message = 'Ce personnage n\'existe pas !';
+	}
+}
+
+elseif (isset($_GET['frapper'])){ // si on a cliqué sur un perso pour le frapper
+	if(!isset($perso)){
+		$message = 'Merci de créer un personnage ou de vous identifier.';
+	}
+	else {
+		if(!$manager->exists((int) $_GET['frapper'])){
+			$message = 'Le personnage que vous essayez de frapper n\'existe pas.';
+		}
+		else {
+			$persoAFrapper = $manager->get((int) $_GET['frapper']);
+			
+			$resultat = $perso->frapper($persoAFrapper);
+			
+			switch($resultat) {
+				case Personnage::CEST_MOI :
+					$message = 'Mais... pourquoi voulez-vous vous frapper ???';
+					break;
+				
+				case Personnage::PERSONNAGE_FRAPPE :
+					$message = 'Le personnage a bien été frappé !';
+					
+					// $manager->update($perso);
+					$manager->update($persoAFrapper);
+					break;
+					
+				case Personnage::PERSONNAGE_TUE :
+					$message = 'Le personnage a été tué !!';
+					
+					// $manager->update($perso);
+					$manager->delete($persoAFrapper);
+					break;
+			}
+		}
+	}
+}
+
+?>
 
 <!DOCTYPE html>
 
