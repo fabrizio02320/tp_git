@@ -74,12 +74,17 @@ class PersonnageManager{
 	
 	// retourne la liste des personnages dont le nom n'est pas $nom 
 	// et retourne un tableau d'instance de personnage
-	public function getList($nom){
+	public function getList($nom = null){
 		$persos = [];
 		
 		// Retourne la liste des personnages dont le nom n'est pas $nom.
-		$q = $this->_db->prepare('SELECT * FROM personnages WHERE nom <> :nom ORDER BY nom');
-		$q->execute([':nom' => $nom]);
+		if($nom){
+			$q = $this->_db->prepare('SELECT * FROM personnages WHERE nom <> :nom ORDER BY nom');
+			$q->execute([':nom' => $nom]);
+		}
+		else {
+			$q = $this->_db->query('SELECT * FROM personnages ORDER BY nom');
+		}
 		
 		// Le résultat sera un tableau d'instances de Personnage.
 		while($donnees = $q->fetch(PDO::FETCH_ASSOC)){
